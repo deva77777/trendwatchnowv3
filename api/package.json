@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "jose": "^5.2.0",
+    "bcryptjs": "^2.4.3",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
