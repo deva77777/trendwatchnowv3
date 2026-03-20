@@ -4,6 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TrendWatchNow - AI-Powered Trending News & Analysis</title>
+    
+    <!-- Google Analytics 4 - Set VITE_GA_ID env var to enable -->
+    <script id="ga-init">
+      (function() {
+        var gaId = '%VITE_GA_ID%';
+        // Only load if env var is set (not the placeholder)
+        if (gaId && gaId.startsWith('G-')) {
+          window.GA_MEASUREMENT_ID = gaId;
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function(){dataLayer.push(arguments);};
+          gtag('js', new Date());
+          gtag('config', gaId, {
+            send_page_view: false,
+            cookie_flags: 'SameSite=None;Secure'
+          });
+        }
+      })();
+    </script>
     <meta name="description" content="TrendWatchNow delivers AI-curated trending news, in-depth analysis, and breaking stories across technology, politics, business, science, and more." />
     <meta property="og:title" content="TrendWatchNow - AI-Powered Trending News & Analysis" />
     <meta property="og:description" content="Stay ahead with AI-curated trending news and in-depth analysis." />

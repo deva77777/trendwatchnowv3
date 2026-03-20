@@ -7,6 +7,7 @@ import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import { mockPosts } from './data/mockPosts';
 import type { Post, View } from './types';
+import analytics from './utils/analytics';
 
 const HAS_BACKEND = import.meta.env.VITE_HAS_BACKEND === 'true';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -101,8 +102,11 @@ export default function App() {
       // Update URL bar
       if (category) {
         window.history.pushState({}, '', `/category/${category.toLowerCase()}`);
+        analytics.pageView(`/category/${category.toLowerCase()}`, `${category} - TrendWatchNow`);
+        analytics.categoryFilter(category);
       } else {
         window.history.pushState({}, '', '/');
+        analytics.pageView('/', 'TrendWatchNow - AI-Powered News');
       }
       // Refetch latest posts from DB when navigating to blog
       if (HAS_BACKEND) {
@@ -110,8 +114,10 @@ export default function App() {
       }
     } else if (page === 'admin-login') {
       setView({ page: 'admin-login' });
+      analytics.pageView('/admin/login', 'Admin Login - TrendWatchNow');
     } else if (page === 'admin-dashboard') {
       setView({ page: 'admin-dashboard' });
+      analytics.pageView('/admin/dashboard', 'Admin Dashboard - TrendWatchNow');
       // Refetch all posts (including drafts) for admin
       if (HAS_BACKEND && authToken) {
         fetchPosts(true, authToken);
@@ -124,15 +130,25 @@ export default function App() {
     setView({ page: 'post', slug });
     // Update URL bar so users can copy/share the clean URL
     window.history.pushState({}, '', `/post/${slug}`);
-  }, []);
+    
+    // Track article view in Google Analytics
+    const post = posts.find(p => p.slug === slug);
+    if (post) {
+      analytics.pageView(`/post/${slug}`, `${post.title} - TrendWatchNow`);
+      analytics.articleView(post.id, post.title, post.category);
+    }
+  }, [posts]);
 
   const handleCategoryChange = useCallback((category?: string) => {
     setView({ page: 'home', category });
     // Update URL bar for category pages
     if (category) {
       window.history.pushState({}, '', `/category/${category.toLowerCase()}`);
+      analytics.pageView(`/category/${category.toLowerCase()}`, `${category} - TrendWatchNow`);
+      analytics.categoryFilter(category);
     } else {
       window.history.pushState({}, '', '/');
+      analytics.pageView('/', 'TrendWatchNow - AI-Powered News');
     }
   }, []);
 
@@ -150,12 +166,15 @@ export default function App() {
           setIsAdmin(true);
           setLoginError('');
           setView({ page: 'admin-dashboard' });
+          analytics.adminLogin(true);
+          analytics.setUserProperties({ user_type: 'admin' });
           // Refetch posts with all (drafts too) — pass token directly since state hasn't updated yet
           fetchPosts(true, data.token);
           return true;
         } else {
           const data = await res.json();
           setLoginError(data.error || 'Invalid credentials');
+          analytics.adminLogin(false);
           return false;
         }
       } catch {

@@ -1,9 +1,26 @@
 const RSS_FEEDS = [
+  // World News
   { name: 'BBC News', url: 'https://feeds.bbci.co.uk/news/rss.xml', category: 'World' },
-  { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/topNews', category: 'World' },
   { name: 'Al Jazeera', url: 'https://www.aljazeera.com/xml/rss/all.xml', category: 'World' },
-  { name: 'TechCrunch', url: 'https://feeds.feedburner.com/TechCrunch/', category: 'Technology' },
+  { name: 'NPR News', url: 'https://feeds.npr.org/1001/rss.xml', category: 'World' },
+  
+  // Technology - OFFICIAL feeds only
+  { name: 'Wired', url: 'https://www.wired.com/feed/rss', category: 'Technology' },
+  { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'Technology' },
+  { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', category: 'Technology' },
+  { name: 'Hacker News', url: 'https://hnrss.org/frontpage', category: 'Technology' },
+  
+  // Business
+  { name: 'CNBC', url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114', category: 'Business' },
+  { name: 'Bloomberg', url: 'https://feeds.bloomberg.com/markets/news.rss', category: 'Business' },
+  
+  // Science & Health
+  { name: 'Science Daily', url: 'https://www.sciencedaily.com/rss/all.xml', category: 'Science' },
+  { name: 'NASA', url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss', category: 'Science' },
+  
+  // Politics
   { name: 'The Guardian', url: 'https://www.theguardian.com/world/rss', category: 'Politics' },
+  { name: 'Politico', url: 'https://www.politico.com/rss/politicopicks.xml', category: 'Politics' },
 ];
 
 interface FeedItem {

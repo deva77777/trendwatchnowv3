@@ -9,11 +9,20 @@ export default function Footer({ onNavigate }: FooterProps) {
   const year = new Date().getFullYear();
 
   const sources = [
+    // World
     { name: 'BBC News', color: 'bg-red-500' },
-    { name: 'Reuters', color: 'bg-orange-500' },
     { name: 'Al Jazeera', color: 'bg-amber-500' },
-    { name: 'TechCrunch', color: 'bg-green-500' },
-    { name: 'The Guardian', color: 'bg-blue-500' },
+    { name: 'NPR', color: 'bg-blue-600' },
+    // Tech
+    { name: 'Wired', color: 'bg-black' },
+    { name: 'Ars Technica', color: 'bg-orange-600' },
+    { name: 'The Verge', color: 'bg-purple-600' },
+    // Business
+    { name: 'CNBC', color: 'bg-blue-500' },
+    { name: 'Bloomberg', color: 'bg-black' },
+    // More
+    { name: 'NASA', color: 'bg-blue-800' },
+    { name: 'The Guardian', color: 'bg-blue-700' },
   ];
 
   return (

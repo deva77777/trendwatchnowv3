@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Clock, Calendar, Share2, Bookmark, BookmarkCheck, Twitter, Facebook, LinkIcon, Tag, Linkedin, Mail, Check, Sparkles, ArrowRight } from 'lucide-react';
 import { Post, CATEGORY_COLORS } from '../types';
+import analytics from '../utils/analytics';
 
 interface BlogPostProps {
   post: Post;
@@ -97,6 +98,41 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
   });
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const scrollMilestonesRef = useRef<Set<number>>(new Set());
+  const startTimeRef = useRef<number>(Date.now());
+
+  // Track scroll depth milestones (25%, 50%, 75%, 100%)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = Math.round((window.scrollY / scrollHeight) * 100);
+      
+      const milestones = [25, 50, 75, 100] as const;
+      for (const milestone of milestones) {
+        if (scrollPercent >= milestone && !scrollMilestonesRef.current.has(milestone)) {
+          scrollMilestonesRef.current.add(milestone);
+          analytics.scrollDepth(milestone, post.id);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [post.id]);
+
+  // Track time on page when leaving
+  useEffect(() => {
+    return () => {
+      const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
+      if (timeSpent > 5) { // Only track if spent more than 5 seconds
+        analytics.timeOnPage(timeSpent, `/post/${post.slug}`);
+        // If read to at least 75%, track as article read
+        if (scrollMilestonesRef.current.has(75)) {
+          analytics.articleRead(post.id, post.title, timeSpent);
+        }
+      }
+    };
+  }, [post.id, post.slug, post.title]);
 
   const colors = CATEGORY_COLORS[post.category] || { bg: 'bg-gray-50', text: 'text-gray-700', dot: 'bg-gray-500' };
   const articleUrl = `https://trendwatchnow.com/post/${post.slug}`;
@@ -115,25 +151,32 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
   const handleBookmark = () => {
     const saved = localStorage.getItem('twn_bookmarks');
     let bookmarks: string[] = saved ? JSON.parse(saved) : [];
+    const action = isBookmarked ? 'remove' : 'add';
     if (isBookmarked) { bookmarks = bookmarks.filter(s => s !== post.slug); }
     else { bookmarks.push(post.slug); }
     localStorage.setItem('twn_bookmarks', JSON.stringify(bookmarks));
     setIsBookmarked(!isBookmarked);
+    analytics.bookmark(post.id, post.title, action);
   };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(articleUrl).then(() => {
       setCopied(true); setTimeout(() => setCopied(false), 2000);
+      analytics.copyLink(articleUrl);
     }).catch(() => {
       const t = document.createElement('textarea'); t.value = articleUrl;
       document.body.appendChild(t); t.select(); document.execCommand('copy');
       document.body.removeChild(t); setCopied(true); setTimeout(() => setCopied(false), 2000);
+      analytics.copyLink(articleUrl);
     });
   };
 
   const handleNativeShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: post.title, text: post.excerpt || '', url: articleUrl }); }
+      try { 
+        await navigator.share({ title: post.title, text: post.excerpt || '', url: articleUrl }); 
+        analytics.socialShare('native', post.title, articleUrl);
+      }
       catch { /* cancelled */ }
     } else { setShowShareMenu(!showShareMenu); }
   };
@@ -146,8 +189,9 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
     whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
   };
 
-  const openShareLink = (url: string) => {
+  const openShareLink = (platform: string, url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer,width=600,height=400');
+    analytics.socialShare(platform, post.title, articleUrl);
   };
 
   return (
@@ -194,11 +238,11 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
                   <div className="fixed inset-0 z-40" onClick={() => setShowShareMenu(false)} />
                   <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl shadow-gray-200/60 border border-gray-100 py-2 z-50 animate-fade-in-scale">
                     {[
-                      { onClick: () => openShareLink(shareLinks.twitter), icon: Twitter, label: 'Twitter / X', iconColor: 'text-sky-500' },
-                      { onClick: () => openShareLink(shareLinks.facebook), icon: Facebook, label: 'Facebook', iconColor: 'text-blue-600' },
-                      { onClick: () => openShareLink(shareLinks.linkedin), icon: Linkedin, label: 'LinkedIn', iconColor: 'text-blue-700' },
-                      { onClick: () => openShareLink(shareLinks.whatsapp), icon: Mail, label: 'WhatsApp', iconColor: 'text-green-600' },
-                      { onClick: () => openShareLink(shareLinks.email), icon: Mail, label: 'Email', iconColor: 'text-gray-500' },
+                      { onClick: () => openShareLink('twitter', shareLinks.twitter), icon: Twitter, label: 'Twitter / X', iconColor: 'text-sky-500' },
+                      { onClick: () => openShareLink('facebook', shareLinks.facebook), icon: Facebook, label: 'Facebook', iconColor: 'text-blue-600' },
+                      { onClick: () => openShareLink('linkedin', shareLinks.linkedin), icon: Linkedin, label: 'LinkedIn', iconColor: 'text-blue-700' },
+                      { onClick: () => openShareLink('whatsapp', shareLinks.whatsapp), icon: Mail, label: 'WhatsApp', iconColor: 'text-green-600' },
+                      { onClick: () => openShareLink('email', shareLinks.email), icon: Mail, label: 'Email', iconColor: 'text-gray-500' },
                     ].map(({ onClick, icon: Icon, label, iconColor }) => (
                       <button
                         key={label}
@@ -307,11 +351,11 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
           </h3>
           <div className="flex flex-wrap gap-2.5">
             {[
-              { onClick: () => openShareLink(shareLinks.twitter), icon: Twitter, label: 'Twitter', hoverBg: 'hover:bg-sky-50', hoverText: 'hover:text-sky-600', hoverBorder: 'hover:border-sky-200' },
-              { onClick: () => openShareLink(shareLinks.facebook), icon: Facebook, label: 'Facebook', hoverBg: 'hover:bg-blue-50', hoverText: 'hover:text-blue-600', hoverBorder: 'hover:border-blue-200' },
-              { onClick: () => openShareLink(shareLinks.linkedin), icon: Linkedin, label: 'LinkedIn', hoverBg: 'hover:bg-blue-50', hoverText: 'hover:text-blue-700', hoverBorder: 'hover:border-blue-200' },
-              { onClick: () => openShareLink(shareLinks.whatsapp), icon: Mail, label: 'WhatsApp', hoverBg: 'hover:bg-green-50', hoverText: 'hover:text-green-600', hoverBorder: 'hover:border-green-200' },
-              { onClick: () => openShareLink(shareLinks.email), icon: Mail, label: 'Email', hoverBg: 'hover:bg-gray-100', hoverText: 'hover:text-gray-700', hoverBorder: 'hover:border-gray-300' },
+              { onClick: () => openShareLink('twitter', shareLinks.twitter), icon: Twitter, label: 'Twitter', hoverBg: 'hover:bg-sky-50', hoverText: 'hover:text-sky-600', hoverBorder: 'hover:border-sky-200' },
+              { onClick: () => openShareLink('facebook', shareLinks.facebook), icon: Facebook, label: 'Facebook', hoverBg: 'hover:bg-blue-50', hoverText: 'hover:text-blue-600', hoverBorder: 'hover:border-blue-200' },
+              { onClick: () => openShareLink('linkedin', shareLinks.linkedin), icon: Linkedin, label: 'LinkedIn', hoverBg: 'hover:bg-blue-50', hoverText: 'hover:text-blue-700', hoverBorder: 'hover:border-blue-200' },
+              { onClick: () => openShareLink('whatsapp', shareLinks.whatsapp), icon: Mail, label: 'WhatsApp', hoverBg: 'hover:bg-green-50', hoverText: 'hover:text-green-600', hoverBorder: 'hover:border-green-200' },
+              { onClick: () => openShareLink('email', shareLinks.email), icon: Mail, label: 'Email', hoverBg: 'hover:bg-gray-100', hoverText: 'hover:text-gray-700', hoverBorder: 'hover:border-gray-300' },
             ].map(({ onClick, icon: Icon, label, hoverBg, hoverText, hoverBorder }) => (
               <button
                 key={label}
