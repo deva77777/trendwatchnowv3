@@ -8,11 +8,13 @@ import AdminDashboard from './components/AdminDashboard';
 import { mockPosts } from './data/mockPosts';
 import type { Post, View } from './types';
 import analytics from './utils/analytics';
+import { useDarkMode } from './hooks/useDarkMode';
 
 const HAS_BACKEND = import.meta.env.VITE_HAS_BACKEND === 'true';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export default function App() {
+  const { isDark, toggle: toggleDark } = useDarkMode();
   const [view, setView] = useState<View>({ page: 'home' });
   const [posts, setPosts] = useState<Post[]>(mockPosts);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -334,6 +336,8 @@ export default function App() {
           posts={posts.filter(p => p.published)}
           onPostClick={handlePostClick}
           showProgress={view.page === 'post'}
+          isDark={isDark}
+          onToggleDark={toggleDark}
         />
       )}
 
@@ -392,6 +396,8 @@ export default function App() {
             onCreatePost={handleCreatePost}
             onUpdatePost={handleUpdatePost}
             onDeletePost={handleDeletePost}
+            isDark={isDark}
+            onToggleDark={toggleDark}
           />
         )}
       </main>

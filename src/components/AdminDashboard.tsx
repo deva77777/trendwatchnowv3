@@ -7,7 +7,8 @@ import {
   Newspaper, Send, Settings, Timer, Power, CalendarClock,
   Hash, Layers, ToggleLeft, ToggleRight, Play, Pause,
   ChevronDown, Info, PieChart, Calendar, Tag, BookOpen,
-  ArrowUp, ArrowDown, Minus, Activity, Target, Award, CheckCircle
+  ArrowUp, ArrowDown, Minus, Activity, Target, Award, CheckCircle,
+  Sun, Moon
 } from 'lucide-react';
 import { Post, RSSItem, CATEGORY_COLORS, CATEGORIES } from '../types';
 
@@ -21,6 +22,8 @@ interface AdminDashboardProps {
   onCreatePost: (post: Partial<Post>) => Promise<Post | null>;
   onUpdatePost: (id: string, updates: Partial<Post>) => Promise<Post | null>;
   onDeletePost: (id: string) => Promise<boolean>;
+  isDark?: boolean;
+  onToggleDark?: () => void;
 }
 
 type Tab = 'overview' | 'posts' | 'generate' | 'sources' | 'settings' | 'analytics';
@@ -325,6 +328,8 @@ export default function AdminDashboard({
   onCreatePost,
   onUpdatePost,
   onDeletePost,
+  isDark,
+  onToggleDark,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -815,6 +820,15 @@ export default function AdminDashboard({
               >
                 <Globe className="w-3 h-3" />
                 View Blog
+              </button>
+              <div className="w-px h-5 bg-brand-800" />
+              <button
+                onClick={onToggleDark}
+                className="flex items-center gap-1.5 text-xs text-brand-300 hover:text-white transition-colors"
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                {isDark ? 'Light' : 'Dark'}
               </button>
               <div className="w-px h-5 bg-brand-800" />
               <button

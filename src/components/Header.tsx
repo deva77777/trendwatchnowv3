@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Menu, X, Shield, ChevronDown, Search, Sparkles } from 'lucide-react';
+import { TrendingUp, Menu, X, Shield, ChevronDown, Search, Sparkles, Sun, Moon } from 'lucide-react';
 import { CATEGORIES, Category, Post } from '../types';
 
 interface HeaderProps {
@@ -9,9 +9,11 @@ interface HeaderProps {
   posts?: Post[];
   onPostClick?: (slug: string) => void;
   showProgress?: boolean;
+  isDark?: boolean;
+  onToggleDark?: () => void;
 }
 
-export default function Header({ currentCategory, onNavigate, isAdmin, posts = [], onPostClick, showProgress }: HeaderProps) {
+export default function Header({ currentCategory, onNavigate, isAdmin, posts = [], onPostClick, showProgress, isDark, onToggleDark }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdown, setCategoryDropdown] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -155,6 +157,15 @@ export default function Header({ currentCategory, onNavigate, isAdmin, posts = [
                 <Search className="w-4 h-4" />
               </button>
 
+              {/* Dark mode toggle */}
+              <button
+                onClick={onToggleDark}
+                className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50/60 rounded-lg transition-all duration-200"
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+
               {/* Admin */}
               <button
                 onClick={() => onNavigate(isAdmin ? 'admin-dashboard' : 'admin-login')}
@@ -165,13 +176,20 @@ export default function Header({ currentCategory, onNavigate, isAdmin, posts = [
               </button>
             </nav>
 
-            {/* Mobile: Search + Menu */}
+            {/* Mobile: Search + Dark mode + Menu */}
             <div className="flex items-center gap-1 lg:hidden">
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
                 className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <Search className="w-5 h-5" />
+              </button>
+              <button
+                onClick={onToggleDark}
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
