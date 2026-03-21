@@ -8,6 +8,8 @@ interface BlogPostProps {
   allPosts: Post[];
   onBack: () => void;
   onPostClick: (slug: string) => void;
+  apiBase?: string;
+  hasBackend?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -90,7 +92,7 @@ function renderInlineFormatting(text: string): (string | React.ReactElement)[] {
   return parts;
 }
 
-export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPostProps) {
+export default function BlogPost({ post, allPosts, onBack, onPostClick, apiBase = '/api', hasBackend = false }: BlogPostProps) {
   const [isBookmarked, setIsBookmarked] = useState(() => {
     const saved = localStorage.getItem('twn_bookmarks');
     if (saved) { const b: string[] = JSON.parse(saved); return b.includes(post.slug); }
@@ -100,6 +102,16 @@ export default function BlogPost({ post, allPosts, onBack, onPostClick }: BlogPo
   const [showShareMenu, setShowShareMenu] = useState(false);
   const scrollMilestonesRef = useRef<Set<number>>(new Set());
   const startTimeRef = useRef<number>(Date.now());
+
+  // Increment view count on backend when post is opened
+  useEffect(() => {
+    if (!hasBackend) return;
+    fetch(`${apiBase}/posts`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: post.id, action: 'increment_views' }),
+    }).catch(() => {}); // silently ignore errors
+  }, [post.id]);
 
   // Track scroll depth milestones (25%, 50%, 75%, 100%)
   useEffect(() => {

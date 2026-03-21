@@ -373,6 +373,8 @@ export default function App() {
               allPosts={posts.filter(p => p.published)}
               onBack={() => handleNavigate('home')}
               onPostClick={handlePostClick}
+              apiBase={API_BASE}
+              hasBackend={HAS_BACKEND}
             />
           );
         })()}
